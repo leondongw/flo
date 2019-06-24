@@ -1,9 +1,0 @@
-flo_demo/db/prj.flo.demo.flo_demo/servers/1=\
-user=root\n\
-password=\n\
-driver=mysql\n\
-host=127.0.0.1\n\
-port=3306\n\
-database=flo_demo_prod\n\
-replica=master\n\
-poolMax=16
