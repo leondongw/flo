@@ -1,5 +1,6 @@
 package work.leond.flo.conf;
 
+import java.io.IOException;
 import java.io.StringReader;
 import java.util.Arrays;
 import java.util.Properties;
@@ -38,6 +39,37 @@ public final class Util {
 
     protected String val(String val) {
       return val;
+    }
+  }
+
+  public static class BoolProp extends Prop<Boolean> {
+    private Boolean  dft;
+    private boolean  ignoreInvalid;
+
+    public BoolProp(String key, Boolean dft) {
+      this(key, dft, true);
+    }
+
+    public BoolProp(String key, Boolean dft, boolean ignoreInvalid) {
+      super(key);
+      this.dft = dft;
+      this.ignoreInvalid = ignoreInvalid;
+    }
+
+    protected Boolean val(String val) {
+      if (val == null || val.isEmpty()) {
+        return dft;
+      }
+
+      if ("true".equals(val)) {
+    	return true;
+      } else if ("false".equals(val)) {
+    	return false;
+      } else if (ignoreInvalid) {
+        return dft;
+      } else {
+        throw new ConfException(key + " invalid value \"" + val + "\"");
+      }
     }
   }
 
@@ -179,10 +211,14 @@ public final class Util {
 
     private Properties p;
 
-    public PropertyReader(String s) throws Exception {
+    public PropertyReader(String s) {
       p = new Properties();
       if (s != null) {
-        p.load(new StringReader(s));
+        try {
+			p.load(new StringReader(s));
+		} catch (IOException e) {
+			// should not happen
+		}
       }
     }
 
