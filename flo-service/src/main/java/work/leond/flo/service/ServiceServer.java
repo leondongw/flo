@@ -660,7 +660,7 @@ public final class ServiceServer {
       }
 
       // check queueMax
-      if (queueSize.longValue() >= queueMax) {
+      if (queueMax >= 0 && queueSize.longValue() >= queueMax) {
         writeResp(req.resp().ex(ServiceException.TOO_MANY_REQUESTS));
         return;
       }
@@ -697,6 +697,7 @@ public final class ServiceServer {
   }
 
   private static void writeResp(Resp resp) {
+    resp.req().protocol.encodeResp(resp);
     resp.req().ctx.writeAndFlush(resp);
   }
 
