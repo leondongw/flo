@@ -76,6 +76,7 @@ public final class ServiceServer {
 
   private Map<String, ServiceServer> servers;
   private Networker networker;
+  private CopyOnWriteArrayList<FuncFilter> funcFilters;
 
   /* Part 1.1: Manage service servers. */
 
@@ -83,6 +84,7 @@ public final class ServiceServer {
   ServiceServer() {
     servers = new ConcurrentHashMap<String, ServiceServer>();
     networker = new Networker();
+    funcFilters = new CopyOnWriteArrayList();
 
     Runtime.getRuntime().addShutdownHook(new Thread(new Runnable() {
       public void run() {
@@ -140,6 +142,10 @@ public final class ServiceServer {
     }
 
     await(server.stop());
+  }
+
+  public void add(FuncFilter funcFilter) {
+    funcFilters.add(funcFilter);
   }
 
   private void shutdown() {
@@ -374,7 +380,7 @@ public final class ServiceServer {
   
         // set Req.ctx
         Req req = (Req) msg;
-        req.ctx = ctx;
+        req.channel = ctx.channel();;
   
         // set Req.protocol
         PortContext portContext =
@@ -452,7 +458,7 @@ public final class ServiceServer {
   private List<Protocol>     protocols;
   //
   private ThreadPoolExecutor executor;
-  private LongAdder          queueSize;
+  private AtomicLong         queueSize;
 
 
   private ServiceServer(
@@ -558,8 +564,8 @@ public final class ServiceServer {
 
     executor = new ThreadPoolExecutor(
         threadMax, threadMax, 1, TimeUnit.MINUTES,
-        new LinkedBlockingQueue<>());
-    queueSize = new LongAdder();
+        new LinkedBlockingQueue<>(), new NamedThreadFactory("ss_svc_"));
+    queueSize = new AtomicLong();
   }
 
   private synchronized void start() {
@@ -651,28 +657,41 @@ public final class ServiceServer {
 
   private void dispatch(Req req) {
     try {
-      if (logReq) {
-        if (logReqParam) {
-          logger.info("req {}.{} {}", name, req.funcName(), req.params());
-        } else {
-          logger.info("req {}.{}", name, req.funcName());
-        }
-      }
-
       // check queueMax
-      if (queueMax >= 0 && queueSize.longValue() >= queueMax) {
+      boolean queueMaxReached = false;
+      if (queueMax >= 0 && queueSize.get() >= queueMax) {
+        queueMaxReached = true;
+      } else if (queueSize.incrementAndGet() > queueMax) {
+        queueMaxReached = true;
+        queueSize.decrementAndGet();
+      }
+      if (queueMaxReached) {
         writeResp(req.resp().ex(ServiceException.TOO_MANY_REQUESTS));
         return;
       }
 
-      queueSize.increment();
       executor.execute(new Runnable() {
         @Override
         public void run() {
+          // log req
+          if (logReq) {
+            if (logReqParam) {
+              logger.info("req {}.{} {}", name, req.funcName(), req.params());
+            } else {
+              logger.info("req {}.{}", name, req.funcName());
+            }
+          }
+
           // prepare
-          queueSize.decrement();
+          queueSize.decrementAndGet();
           Req.current(req);
 
+          // funcFilter.beforeFunc
+          for (FuncFilter funcFilter : container.funcFilters) {
+            funcFilter.beforeFunc(req);
+          }
+
+          // execute
           try {
             Object ret = req.func.method.invoke(
                 service, req.func.params.values());
@@ -686,6 +705,21 @@ public final class ServiceServer {
             req.resp().ex(e);
           }
 
+          // funcFilter.afterFunc
+          for (FuncFilter funcFilter : container.funcFilters) {
+            funcFilter.afterFunc(req.resp());
+          }
+
+          // log resp
+          if (logReq) {
+            if (logReqParam) {
+              logger.info("resp {}.{} {} {}", name, req.funcName(), req.params(), req.resp().ret());
+            } else {
+              logger.info("resp {}.{} {}", name, req.funcName(), req.resp().ret());
+            }
+          }
+
+          // write resp
           writeResp(req.resp());
         }
       });
@@ -697,8 +731,7 @@ public final class ServiceServer {
   }
 
   private static void writeResp(Resp resp) {
-    resp.req().protocol.encodeResp(resp);
-    resp.req().ctx.writeAndFlush(resp);
+    resp.req().channel.writeAndFlush(resp);
   }
 
 

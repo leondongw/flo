@@ -31,7 +31,7 @@ public class UserServiceImpl implements UserService {
   }
 
   public void modUser(User user) {
-    //...
+    int a = 1 / 0;
   }
 
 }

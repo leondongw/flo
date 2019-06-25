@@ -3,6 +3,7 @@ package work.leond.flo.service;
 import java.util.Map;
 import java.util.TreeMap;
 
+import io.netty.channel.Channel;
 import io.netty.channel.ChannelHandlerContext;
 import work.leond.flo.service.util.NamedTuple;
 
@@ -45,9 +46,9 @@ public abstract class Req<Q extends Req<Q,P>, P extends Resp<Q,P>> {
   private Map<String,String>    headers = new TreeMap<String,String>();
   private Map<String,Object>    attrs   = new TreeMap<String,Object>();
   // package scope set
-  Protocol<Q,P>         protocol;
-  Func                  func;
-  ChannelHandlerContext ctx;
+  Protocol<Q,P> protocol;
+  Func          func;
+  Channel       channel;
 
 
   protected     Req() {}
