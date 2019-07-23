@@ -11,6 +11,15 @@ import java.util.concurrent.ConcurrentHashMap;
 import io.netty.channel.ChannelHandler;
 import work.leond.flo.conf.Util.OptProp;
 
+/**
+ * Protocol hanles three thins:<br/>
+ * 1 Encode / decode between bytes and protocol message.
+ * 2 Encode / decode between protocol message and Req&Resp.
+ * 3 Hold protocol informations of a service.
+ *
+ * @param <Q> class of request
+ * @param <P> class of response
+ */
 @SuppressWarnings({ "rawtypes" })
 abstract class Protocol<Q extends Req<Q, P>, P extends Resp<Q, P>> {
 
@@ -54,15 +63,18 @@ abstract class Protocol<Q extends Req<Q, P>, P extends Resp<Q, P>> {
     return props != null ? props.get(key) : null;
   }
 
-  public Protocol setFrom(Properties allProps) {
+  /** Load props from properties. */
+  Protocol loadPropsFrom(Properties ps) {
     String protocolPrefix = "protocol." + port + ".";
-    status = Meta.status.val(allProps, protocolPrefix);
+    status = Meta.status.val(ps, protocolPrefix);
 
     String propPrefix = protocolPrefix + "prop.";
     int propStartIndex = propPrefix.length();
-    for (Map.Entry p : allProps.entrySet()) {
+    for (Map.Entry p : ps.entrySet()) {
       String key = (String) p.getKey();
       String val = (String) p.getValue();
+      if (key == null) {continue;}
+
       if (key.startsWith(propPrefix)) {
         if (props == null) {
           props = new HashMap<>();
@@ -95,6 +107,10 @@ abstract class Protocol<Q extends Req<Q, P>, P extends Resp<Q, P>> {
 
 
 
+  public static interface Name {
+    String HTTP = "http";
+  }
+
   private static interface Meta {
 
     enum Status {
@@ -103,10 +119,6 @@ abstract class Protocol<Q extends Req<Q, P>, P extends Resp<Q, P>> {
 
     OptProp status = new OptProp("status", Status.on, Status.values());
 
-  }
-
-  public static interface Name {
-    String HTTP = "http";
   }
 
   /** Map of key: protocol name, value: protocol class. */
@@ -122,18 +134,16 @@ abstract class Protocol<Q extends Req<Q, P>, P extends Resp<Q, P>> {
   }
 
   /** Get a new instance of specified protocol. */
-  public static Protocol of(String name) {
+  static Protocol of(String name) throws ServiceException {
     Class<? extends Protocol> protocolClass = protocolClasses.get(name);
     if (protocolClass == null) {
-      logger.info("Protocol unregistered {}", name);
-      return null;
+      throw new ServiceException("Protocol unregistered " + name);
     }
 
     try {
       return protocolClass.newInstance();
     } catch (InstantiationException | IllegalAccessException e) {
-      logger.error("Protocol newInstance fail " + name, e);
-      return null;
+      throw new ServiceException("Protocol newInstance fail " + name, e);
     }
   }
 

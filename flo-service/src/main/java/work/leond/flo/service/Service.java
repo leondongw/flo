@@ -2,6 +2,9 @@ package work.leond.flo.service;
 
 public final class Service {
 
+  private Service() {}
+
+
   private static ServiceServer server = new ServiceServer();
 
   public static ServiceServer server() {
@@ -15,11 +18,15 @@ public final class Service {
 
 
 
+  // package scoped
+
   static enum Status {
     stopped  ( 0),
+    /** start command. used for control. */
     start    (10),
     starting (11),
     started  (12),
+    /** stop command. used for control. */
     stop     (20),
     stoping  (21),
     ;

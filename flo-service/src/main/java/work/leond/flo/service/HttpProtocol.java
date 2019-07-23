@@ -10,6 +10,7 @@ import com.fasterxml.jackson.databind.DeserializationFeature;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.SerializationFeature;
 
+import io.netty.channel.Channel;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -86,7 +87,7 @@ class HttpProtocol extends Protocol<HttpReq, HttpResp> {
 
     Map contentMap = fromJson(req.content, Map.class);
 
-    req.params(req.func.params.clone());
+    req.params(req.func.params().clone());
     for (int i = req.params().size() - 1; i >= 0; i--) {
       NamedTuple.Element param = req.params().get(i);
 
@@ -192,7 +193,7 @@ class HttpProtocol extends Protocol<HttpReq, HttpResp> {
     try {
       return Om.writeValueAsString(obj);
     } catch (Exception e) {
-      logger.warn("toJson fail", e);
+      logger.error("toJson fail", e);
       return null;
     }
   }
@@ -290,14 +291,17 @@ class HttpProtocol extends Protocol<HttpReq, HttpResp> {
 
       // from path/URL parameters
       if (uriQuery != null && !uriQuery.isEmpty()) {
-        req.namedContentsEnsure();
-        decodeUrlencoded(uriQuery, req.namedContents);
+        if (!decodeUrlencoded(uriQuery, req, ctx.channel())) {
+          return;
+        }
       }
 
       if (isFormUrlencoded) {
         // for content-type application/x-www-form-urlencoded
-        req.namedContentsEnsure();
-        decodeUrlencoded(msg.content().toString(UTF8), req.namedContents);
+        if (!decodeUrlencoded(
+            msg.content().toString(UTF8), req, ctx.channel())) {
+          return;
+        }
 
       } else if (isMultipart) {
         // for content-type multipart/form-data
@@ -323,14 +327,12 @@ class HttpProtocol extends Protocol<HttpReq, HttpResp> {
               fbyte.readBytes(fcontent);
             }
 
-            req.filesEnsure();
-            req.files.put(dataName, new HttpDataFile(
+            req.file(dataName, new HttpDataFile(
                 f.getFilename(), f.getContentType(), fcontent));
 
           } else {
             Attribute data2 = (Attribute) data;
-            req.namedContentsEnsure();
-            req.namedContents.put(dataName, data2.getValue());
+            req.namedContent(dataName, data2.getValue());
           }
         }
         decoder.destroy();
@@ -360,9 +362,11 @@ class HttpProtocol extends Protocol<HttpReq, HttpResp> {
       ctx.fireChannelRead(req);
     }
 
-    private static void decodeUrlencoded(String raw, Map<String, String> map) {
+    private static boolean decodeUrlencoded(
+        String raw, HttpReq req, Channel channel) {
+
       if (raw == null || raw.isEmpty()) {
-        return;
+        return true;
       }
 
       try {
@@ -372,12 +376,14 @@ class HttpProtocol extends Protocol<HttpReq, HttpResp> {
           String k = URLDecoder.decode(raws3[0], "UTF-8");
           String v = raws3.length > 1 ?
               URLDecoder.decode(raws3[1], "UTF-8") : "";
-          map.put(k, v);
+          req.namedContent(k, v);
         }
+        return true;
 
       } catch (Exception e) {
-        // TODO decode error, return bad request
-        logger.warn("decodeUrlencoded fail ignored", e);
+        logger.warn("decodeUrlencoded fail", e);
+        writeBadRequest(req, channel);
+        return false;
       }
     }
 
@@ -426,6 +432,20 @@ class HttpProtocol extends Protocol<HttpReq, HttpResp> {
 
       // write message and flush
       ctx.writeAndFlush(httpResponse);
+    }
+
+    private static void writeBadRequest(HttpReq req, Channel channel) {
+
+      FullHttpResponse httpResponse = new DefaultFullHttpResponse(
+          HttpVersion.HTTP_1_1,
+          HttpResponseStatus.BAD_REQUEST);
+
+      if (req.isKeepAlive) {
+        httpResponse.headers().set(
+            HttpHeaderNames.CONNECTION, HttpHeaderValues.KEEP_ALIVE);
+      }
+
+      channel.writeAndFlush(httpResponse);
     }
 
     private static Charset getCharset(HttpResp resp) {

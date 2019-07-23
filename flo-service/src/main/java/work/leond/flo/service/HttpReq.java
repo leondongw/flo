@@ -51,16 +51,18 @@ public class HttpReq extends Req<HttpReq,HttpResp> {
   }
 
 
-  void namedContentsEnsure() {
+  String namedContent(String key, String value) {
     if (namedContents == null) {
-      namedContents = new TreeMap<String,String>();
+      namedContents = new TreeMap<>();
     }
+    return namedContents.put(key, value);
   }
 
-  void filesEnsure() {
+  HttpDataFile file(String key, HttpDataFile value) {
     if (files == null) {
-      files = new TreeMap<String,HttpDataFile>();
+      files = new TreeMap<>();
     }
+    return files.put(key, value);
   }
 
 

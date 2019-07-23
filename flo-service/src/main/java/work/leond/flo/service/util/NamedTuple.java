@@ -26,9 +26,9 @@ public class NamedTuple implements Cloneable {
     int len = elements.length;
 
     this.elements = new Element[len];
-    elementsByName = new HashMap<String,Element<?>>(len + len / 2 + 1, 1.0f);
+    elementsByName = new HashMap<>(len + len / 2 + 1, 1.0f);
 
-    Element<?> elem = null;
+    Element<?> elem;
     for (int i = 0; i < len; i++) {
       elem = elements[i];
 
@@ -157,7 +157,7 @@ public class NamedTuple implements Cloneable {
     }
 
     public Element<T> clone() {
-      return new Element<T>(name, type, value);
+      return new Element<>(name, type, value);
     }
 
     public  String name() {
@@ -179,7 +179,7 @@ public class NamedTuple implements Cloneable {
 
 
     public  static <T> Element<T> of(String name, Type type) {
-      return new Element<T>(name, type);
+      return new Element<>(name, type);
     }
 
   }

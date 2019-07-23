@@ -15,16 +15,13 @@ public class TestService {
     // ATTENTION
     // use javac -parameters in java1.8 to keep parameter name in class file
 
-    Service.server().add(new FuncFilter() {
+    Service.server().addFilter(new FuncFilter() {
       @Override
       public void beforeFunc(Req req) {
-        System.out.println("beforeFunc: " + req);
       }
 
       @Override
       public void afterFunc(Resp resp) {
-        System.out.println("afterFunc: " + resp);
-
         Map<String,Object> r = new HashMap<>();
         if (resp.ex() != null) {
           r.put("code", 1);

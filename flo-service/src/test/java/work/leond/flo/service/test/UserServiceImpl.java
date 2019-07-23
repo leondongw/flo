@@ -19,6 +19,12 @@ public class UserServiceImpl implements UserService {
 
     CompletableFuture<User> r = new CompletableFuture<User>();
     r.complete(fake);
+
+    try {
+      Thread.sleep(10 * 1000);
+    } catch (InterruptedException e) {
+      e.printStackTrace();
+    }
     return r;
   }
 

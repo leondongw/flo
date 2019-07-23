@@ -72,8 +72,7 @@ public final class Db {
   public static Db getDb(String name) {
     Db db = dbs.get(name);
     if (db == null) {
-      Object lock = getDbLock(name);
-      synchronized (lock) {
+      synchronized (getDbLock(name)) {
         db = dbs.get(name);
         if (db == null) {
           db = new Db(name);
@@ -139,7 +138,7 @@ public final class Db {
       // path
 
       static String pathPrefix(String db) {
-        return "db/" + db + "/server/";
+        return "flo.db/" + db + "/server/";
       }
 
       static String pathToId(String db, String key) {
@@ -527,7 +526,12 @@ public final class Db {
 
     public  void    fclass(Class<?> fclass) {
       this.fclass = fclass;
-      this.fclassIsNumber = Number.class.isAssignableFrom(fclass);
+      this.fclassIsNumber =
+          Number.class.isAssignableFrom(fclass) ||
+          fclass == byte .class ||
+          fclass == int  .class ||
+          fclass == short.class ||
+          fclass == long .class;
     }
 
     public  boolean id() {
@@ -590,14 +594,18 @@ public final class Db {
         Number vn = Number.class.cast(v);
         if (fclass == Byte   .class) {return vn.byteValue ();}
         if (fclass == Short  .class) {return vn.shortValue();}
-        if (fclass == Integer.class) {return vn.intValue();}
-        if (fclass == Long   .class) {return vn.longValue();}
+        if (fclass == Integer.class) {return vn.intValue  ();}
+        if (fclass == Long   .class) {return vn.longValue ();}
         if (fclass == BigInteger.class) {
           return BigInteger.valueOf(vn.longValue());
         }
         if (fclass == BigDecimal.class) {
           return BigDecimal.valueOf(vn.doubleValue());
         }
+        if (fclass == byte .class) {return vn.byteValue ();}
+        if (fclass == short.class) {return vn.shortValue();}
+        if (fclass == int  .class) {return vn.intValue  ();}
+        if (fclass == long .class) {return vn.longValue ();}
       }
 
       return v;

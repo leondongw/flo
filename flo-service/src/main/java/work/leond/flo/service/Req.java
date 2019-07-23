@@ -4,7 +4,6 @@ import java.util.Map;
 import java.util.TreeMap;
 
 import io.netty.channel.Channel;
-import io.netty.channel.ChannelHandlerContext;
 import work.leond.flo.service.util.NamedTuple;
 
 /**
@@ -25,8 +24,7 @@ import work.leond.flo.service.util.NamedTuple;
 @SuppressWarnings("unchecked")
 public abstract class Req<Q extends Req<Q,P>, P extends Resp<Q,P>> {
 
-  private static ThreadLocal<Req<?,?>> threadLocal =
-      new ThreadLocal<Req<?,?>>();
+  private static ThreadLocal<Req<?,?>> threadLocal = new ThreadLocal<>();
 
   /** Get current request. */
   public static Req<?,?> current() {
@@ -43,8 +41,8 @@ public abstract class Req<Q extends Req<Q,P>, P extends Resp<Q,P>> {
   private String                serviceName;
   private String                funcName;
   private NamedTuple            params;
-  private Map<String,String>    headers = new TreeMap<String,String>();
-  private Map<String,Object>    attrs   = new TreeMap<String,Object>();
+  private Map<String,String>    headers = new TreeMap<>();
+  private Map<String,Object>    attrs   = new TreeMap<>();
   // package scope set
   Protocol<Q,P> protocol;
   Func          func;
@@ -119,7 +117,7 @@ public abstract class Req<Q extends Req<Q,P>, P extends Resp<Q,P>> {
   }
 
   /** Get request attributes. */
-  public Map<String,? extends Object> attrs() {
+  public Map<String,?> attrs() {
     return attrs;
   }
 

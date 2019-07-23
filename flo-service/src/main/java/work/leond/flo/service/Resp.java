@@ -22,8 +22,8 @@ public abstract class Resp<Q extends Req<Q,P>, P extends Resp<Q,P>> {
   private Q                  req;
   private Object             ret;
   private Throwable          ex;
-  private Map<String,String> headers = new TreeMap<String,String>();
-  private Map<String,Object> attrs   = new TreeMap<String,Object>();
+  private Map<String,String> headers = new TreeMap<>();
+  private Map<String,Object> attrs   = new TreeMap<>();
 
   protected Resp(Q req) {
     this.req = req;
