@@ -18,6 +18,14 @@ public class TestService {
     Service.server().addFilter(new FuncFilter() {
       @Override
       public void beforeFunc(Req req) {
+        String requesterId = req.header("_requester_id");
+        User requester = new User();
+        try {
+          requester.setId(Long.parseLong(requesterId));
+        } catch (NumberFormatException e) {
+          requester = null;
+        }
+        req.param("requester", requester);
       }
 
       @Override
@@ -40,7 +48,7 @@ public class TestService {
     Service.server().start(new UserServiceImpl());
 
     // POST
-    // http://127.0.0.1:8080/test.user/getUser
+    // http://127.0.0.1:8080/flo.u/getUser
     // body: {"id":11}
   }
 

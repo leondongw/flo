@@ -924,18 +924,29 @@ public final class ServiceServer {
     // execute
     try {
       Object ret = req.func.method().invoke(
-          service, req.func.params().values());
-      // TODO refine performance
-      if (ret instanceof Future) {
-        ret = ((Future)ret).get();
+          service, req.params().values());
+
+      if (ret instanceof CompletableFuture) {
+        ((CompletableFuture)ret).thenAccept(ret2 -> {
+          req.resp().ret(ret2);
+          afterExecute(req);
+        });
+        return;
+
+      } else {
+        req.resp().ret(ret);
       }
-      req.resp().ret(ret);
 
     } catch (Throwable e) {
       req.resp().ex(e);
     }
 
+    afterExecute(req);
+  }
+
+  private void afterExecute(Req req) {
     // funcFilters afterFunc
+    int funcFilterLen = container.funcFilters.size();
     for (int i = funcFilterLen - 1; i >= 0; i--) {
       FuncFilter funcFilter = container.funcFilters.get(i);
       try {

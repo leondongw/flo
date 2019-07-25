@@ -132,12 +132,4 @@ public abstract class Req<Q extends Req<Q,P>, P extends Resp<Q,P>> {
     return (Q) this;
   }
 
-  public Protocol<Q,P> protocol() {
-    return protocol;
-  }
-
-  public Func   func() {
-    return func;
-  }
-
 }

@@ -53,7 +53,7 @@ public class NamedTuple implements Cloneable {
   }
 
   public String toString() {
-    /* {0(x):aa, 1(y):bb}
+    /* {x:aa, y:bb}
      */
     StringBuilder str = new StringBuilder(elements.length * 20);
 
@@ -61,9 +61,10 @@ public class NamedTuple implements Cloneable {
     
     for (int i = 0; i < elements.length; i++) {
       Element<?> ele = elements[i];
-      str.append(i);
       if (ele.name != null) {
-        str.append("(").append(ele.name).append(")");
+        str.append(ele.name);
+      } else {
+        str.append(i);
       }
       str.append(":").append(ele.value);
       if (i < elements.length - 1) {

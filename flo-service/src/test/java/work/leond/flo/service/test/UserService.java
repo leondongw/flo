@@ -1,13 +1,13 @@
 package work.leond.flo.service.test;
 
-import java.util.concurrent.Future;
+import java.util.concurrent.CompletableFuture;
 
 public interface UserService {
 
-  Future<User> getUser(User userReq, Long id);
+  CompletableFuture<User> getUser(User requester, Long id);
 
-  User getUser2(User userReq, Long id);
+  User getUser2(User requester, Long id);
 
-  void modUser(User user);
+  void modUser(User requester, User user);
 
 }

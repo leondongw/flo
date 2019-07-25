@@ -4,6 +4,22 @@ import java.util.Map;
 import java.util.TreeMap;
 
 
+/**
+ * <pre>
+ * path is URI path
+ *
+ * content is:
+ * 1 HTTP body if content-type not form or multipart
+ *
+ * namedContents include:
+ * 1 URI queries
+ * 2 parameters for content-type application/x-www-form-urlencoded
+ * 3 contents (except file) for content-type multipart/form-data
+ *
+ * files include:
+ * 1 files for content-type multipart/form-data
+ * </pre>
+ */
 public class HttpReq extends Req<HttpReq,HttpResp> {
 
   String                   remoteIp;
