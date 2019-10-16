@@ -1,10 +1,6 @@
 package work.leond.flo.conf;
 
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.Comparator;
-import java.util.List;
-import java.util.TreeSet;
+import java.util.*;
 
 /**
  * <pre>
@@ -74,14 +70,14 @@ public final class Conf {
       return kvsEtcd;
     }
 
-    TreeSet<Kv> kvSet = new TreeSet<Kv>(kvComparator);
+    TreeSet<Kv> kvSet = new TreeSet<>(kvComparator);
     for (Kv kv : kvsLocal) {
       kvSet.add(kv);
     }
     for (Kv kv : kvsEtcd) {
       kvSet.add(kv);
     }
-    return new ArrayList<Kv>(kvSet);
+    return new ArrayList<>(kvSet);
   }
 
   public  static List<Kv> range(String key, String rangeEnd) {

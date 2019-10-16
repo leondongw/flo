@@ -139,7 +139,7 @@ public class TestDb {
       batch.sql(
           "insert into user(create_time,nickname,birthday)" +
           " values(?,?,?)");
-      List<Object[]> params = new ArrayList<Object[]>();
+      List<Object[]> params = new ArrayList<>();
       for (int i = 2; i < 5; i++) {
         params.add(new Object[] {
             System.currentTimeMillis(),
@@ -153,14 +153,14 @@ public class TestDb {
 
 
     // list first three users
-    List<User> users = db.execute(new Db.Query<User>(
+    List<User> users = db.execute(new Db.Query<>(
       User.class, "select * from user limit 3"));
     System.out.println("\nlist users:");
     for (User user : users) {
       System.out.println(user);
     }
     // list three users by birthday in 200X
-    users = db.execute(new Db.Query<User>(
+    users = db.execute(new Db.Query<>(
         User.class,
         "select * from user where birthday between ? and ? limit 3",
         User.toBirthdayInDb("2000-01-01"),

@@ -58,7 +58,7 @@ final class StandaloneConfer implements Confer {
     String file = floConf(KEY_FILE, DFT_VAL_FILE);
     String classpathFile = floConf(KEY_CLASSPATH_FILE, DFT_VAL_CLASSPATH_FILE);
 
-    props = new TreeMap<String,String>(System.getenv());
+    props = new TreeMap<>(System.getenv());
     propsAdd(props, propsOfFile(file));
     propsAdd(props, propsOfClasspathFile(classpathFile));
   }
@@ -115,11 +115,11 @@ final class StandaloneConfer implements Confer {
     if (keyIsInvalid(rangeEnd)) {
       String v = single(key);
       if (v == null) {return Collections.emptyList();}
-      return Arrays.asList(new Kv[]{new Kv(key, v)});
+      return Arrays.asList(new Kv(key, v));
     }
 
     //range keys
-    ArrayList<Kv> kvs = new ArrayList<Kv>();
+    ArrayList<Kv> kvs = new ArrayList<>();
     boolean started   = Conf.keyOfInfinite().equals(key);
     boolean endAtLast = Conf.keyOfInfinite().equals(rangeEnd);
     

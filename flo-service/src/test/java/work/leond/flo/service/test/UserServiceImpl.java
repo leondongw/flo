@@ -13,22 +13,19 @@ public class UserServiceImpl implements UserService {
 
     // only self can see detail
 
-    if (requester == null || requester.getId() != id) {
+    if (requester == null || !requester.getId().equals(id)) {
       fake.setGender(null);
       fake.setBirthday(null);
     }
 
     CompletableFuture<User> r = new CompletableFuture<>();
-    new Thread(new Runnable() {
-      @Override
-      public void run() {
-        try {
-          Thread.sleep(1000L);
-        } catch (InterruptedException e) {
-          e.printStackTrace();
-        }
-        r.complete(fake);
+    new Thread(() -> {
+      try {
+        Thread.sleep(1000L);
+      } catch (InterruptedException e) {
+        e.printStackTrace();
       }
+      r.complete(fake);
     }).start();
 
     return r;
@@ -43,7 +40,7 @@ public class UserServiceImpl implements UserService {
   }
 
   public void modUser(User requester, User user) {
-    int a = 1 / 0;
+    throw new RuntimeException("test");
   }
 
 }

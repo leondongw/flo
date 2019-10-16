@@ -66,22 +66,6 @@ public class HttpReq extends Req<HttpReq,HttpResp> {
     return files;
   }
 
-
-  String namedContent(String key, String value) {
-    if (namedContents == null) {
-      namedContents = new TreeMap<>();
-    }
-    return namedContents.put(key, value);
-  }
-
-  HttpDataFile file(String key, HttpDataFile value) {
-    if (files == null) {
-      files = new TreeMap<>();
-    }
-    return files.put(key, value);
-  }
-
-
   public static String remoteIpProxied(HttpReq req) {
     String ip = req.headers().get("X-Forwarded-For");
     if (ip == null || ip.isEmpty() || ip.equals("unknown")) {
@@ -101,6 +85,21 @@ public class HttpReq extends Req<HttpReq,HttpResp> {
     }
 
     return ip.isEmpty() ? null : ip;
+  }
+
+
+  String namedContent(String key, String value) {
+    if (namedContents == null) {
+      namedContents = new TreeMap<>();
+    }
+    return namedContents.put(key, value);
+  }
+
+  HttpDataFile file(String key, HttpDataFile value) {
+    if (files == null) {
+      files = new TreeMap<>();
+    }
+    return files.put(key, value);
   }
 
 }

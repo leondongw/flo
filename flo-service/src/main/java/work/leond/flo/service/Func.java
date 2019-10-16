@@ -7,14 +7,14 @@ import work.leond.flo.service.util.NamedTuple;
 
 class Func {
 
-  private String     name;
-  private Method     method;
-  private NamedTuple params;
-  private NamedTuple ret;
+  private String      name;
+  private Method      method;
+  private NamedTuple  params;
+  private NamedTuple  ret;
   // package scoped
-  int        queueMax;
-  boolean    logReq;
-  boolean    logReqParam;
+  int                 queueMax;
+  boolean             logReq;
+  boolean             logReqParam;
   Map<String,Boolean> logReqParams;
 
 

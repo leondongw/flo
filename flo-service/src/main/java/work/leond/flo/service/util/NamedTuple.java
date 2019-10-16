@@ -22,6 +22,7 @@ public class NamedTuple implements Cloneable {
   private Element<?>[]           elements;
   private Map<String,Element<?>> elementsByName;
 
+
   public NamedTuple(Element<?>... elements) {
     int len = elements.length;
 
@@ -51,6 +52,7 @@ public class NamedTuple implements Cloneable {
 
     }
   }
+
 
   public String toString() {
     /* {x:aa, y:bb}
@@ -138,6 +140,9 @@ public class NamedTuple implements Cloneable {
   public int size() {
     return elements.length;
   }
+
+
+
 
 
   public static final class Element<T> implements Cloneable {

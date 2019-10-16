@@ -7,7 +7,6 @@
     <artifactId>flo</artifactId>
     <version>0.1.1-SNAPSHOT</version>
   </parent>
-  <groupId>work.leond</groupId>
   <artifactId>flo-db</artifactId>
   <version>0.1.1-SNAPSHOT</version>
   <packaging>jar</packaging>

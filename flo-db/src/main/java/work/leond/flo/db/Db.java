@@ -65,8 +65,8 @@ public final class Db {
 
   private static final Logger logger = LoggerFactory.getLogger(Db.class);
   // init as no more then 10 dbs usually
-  private static final ConcurrentHashMap<String, Db> dbs = new ConcurrentHashMap<String, Db>(16, 0.9f, 16);
-  private static final ConcurrentHashMap<String, Object> dbLocks = new ConcurrentHashMap<String, Object>(16, 0.9f, 16);
+  private static final ConcurrentHashMap<String, Db> dbs = new ConcurrentHashMap<>(16, 0.9f, 16);
+  private static final ConcurrentHashMap<String, Object> dbLocks = new ConcurrentHashMap<>(16, 0.9f, 16);
 
   /** get Db instance for database {name} */
   public static Db getDb(String name) {
@@ -283,16 +283,16 @@ public final class Db {
   }
 
   private static class ServerGroup {
-    public  List<Server> servers = new ArrayList<Server>();
-    public  List<Server> masters = new ArrayList<Server>();
-    public  List<Server> slaves  = new ArrayList<Server>();
+    public  List<Server> servers = new ArrayList<>();
+    public  List<Server> masters = new ArrayList<>();
+    public  List<Server> slaves  = new ArrayList<>();
   }
 
   private        class ServerWatcher implements Watcher {
     public void changed(List<Event> events) {
       if (events == null || events.isEmpty()) {return;}
 
-      List<Server> serversChanged = new ArrayList<Server>(events.size());
+      List<Server> serversChanged = new ArrayList<>(events.size());
       for (Event e : events) {
         serversChanged.add(Server.of(
             name, e.getKv(), e.getType() == Event.TYPE_DELETE));
@@ -317,7 +317,7 @@ public final class Db {
   private AtomicInteger   masterIndex = new AtomicInteger();
   private AtomicInteger   slaveIndex  = new AtomicInteger();
   private ExecutorService serverCloseExecutor = new ThreadPoolExecutor(
-      0, 1, 10L, TimeUnit.SECONDS, new LinkedBlockingQueue<Runnable>(),
+      0, 1, 10L, TimeUnit.SECONDS, new LinkedBlockingQueue<>(),
       new ServerCloseThreadFactory());
 
   private Db(String name) {
@@ -328,7 +328,7 @@ public final class Db {
     List<Kv> kvs = Conf.range(
         confPathPrefixOfServer, Conf.rangeEnd(confPathPrefixOfServer),
         new ServerWatcher());
-    List<Server> servers = new ArrayList<Server>(kvs.size());
+    List<Server> servers = new ArrayList<>(kvs.size());
     for (Kv kv : kvs) {
       servers.add(Server.of(name, kv, false));
     }
@@ -339,8 +339,8 @@ public final class Db {
     if (serversChanged == null || serversChanged.isEmpty()) {return;}
 
     // add none-exist ones, replace exist ones, remove deleted ones
-    List<Server> servers2 = new ArrayList<Server>(this.serverGroup.servers);
-    List<Server> serversRemoved = new ArrayList<Server>();
+    List<Server> servers2 = new ArrayList<>(this.serverGroup.servers);
+    List<Server> serversRemoved = new ArrayList<>();
 
     for (Server serverChanged : serversChanged) {
       int serverChangedIndex = -1;
@@ -411,11 +411,7 @@ public final class Db {
     // close removed servers
     for (Server server : serversRemoved) {
       server.deleted = true;
-      serverCloseExecutor.submit(new Runnable(){
-        public void run() {
-          server.close();
-        }
-      });
+      serverCloseExecutor.submit(server::close);
     }
   }
 
@@ -442,9 +438,9 @@ public final class Db {
         index = serverIndex;
       }
 
-      Server s = null;
+      Server s;
       if (ss.isEmpty()) {
-        // s = null;
+        s = null;
       } else if (ss.size() == 1) {
         s = ss.get(0);
       } else {
@@ -591,21 +587,21 @@ public final class Db {
       if (vclass == fclass) {return v;}
 
       if (Number.class.isAssignableFrom(vclass)) {
-        Number vn = Number.class.cast(v);
-        if (fclass == Byte   .class) {return vn.byteValue ();}
-        if (fclass == Short  .class) {return vn.shortValue();}
-        if (fclass == Integer.class) {return vn.intValue  ();}
-        if (fclass == Long   .class) {return vn.longValue ();}
+        Number vn = (Number) v;
+        if (fclass == Byte      .class) {return vn.byteValue ();}
+        if (fclass == Short     .class) {return vn.shortValue();}
+        if (fclass == Integer   .class) {return vn.intValue  ();}
+        if (fclass == Long      .class) {return vn.longValue ();}
         if (fclass == BigInteger.class) {
           return BigInteger.valueOf(vn.longValue());
         }
         if (fclass == BigDecimal.class) {
           return BigDecimal.valueOf(vn.doubleValue());
         }
-        if (fclass == byte .class) {return vn.byteValue ();}
-        if (fclass == short.class) {return vn.shortValue();}
-        if (fclass == int  .class) {return vn.intValue  ();}
-        if (fclass == long .class) {return vn.longValue ();}
+        if (fclass == byte      .class) {return vn.byteValue ();}
+        if (fclass == short     .class) {return vn.shortValue();}
+        if (fclass == int       .class) {return vn.intValue  ();}
+        if (fclass == long      .class) {return vn.longValue ();}
       }
 
       return v;
@@ -617,14 +613,14 @@ public final class Db {
   private static class Ctm<C> {
 
     private static final ConcurrentHashMap<Class<?>, Ctm<?>> ctms =
-        new ConcurrentHashMap<Class<?>, Ctm<?>>(100);
+        new ConcurrentHashMap<>(100);
 
     @SuppressWarnings("unchecked")
     public  static <C> Ctm<C> of(Class<C> c) {
       Ctm<C> ctm = (Ctm<C>) ctms.get(c);
       if (ctm != null) {return ctm;}
   
-      ctm = new Ctm<C>(c);
+      ctm = new Ctm<>(c);
       Ctm<C> ctm2 = (Ctm<C>) ctms.putIfAbsent(c, ctm);
       if (ctm2 != null) {ctm = ctm2;}
       return ctm;
@@ -633,9 +629,9 @@ public final class Db {
 
     private Class<C>  c;
     private String    t;
-    private List<Fcm> fcms = new ArrayList<Fcm>();
-    private Map<String, Fcm> fcmsByFname = new HashMap<String, Fcm>();
-    private Map<String, Fcm> fcmsByCname = new HashMap<String, Fcm>();
+    private List<Fcm> fcms = new ArrayList<>();
+    private Map<String, Fcm> fcmsByFname = new HashMap<>();
+    private Map<String, Fcm> fcmsByCname = new HashMap<>();
 
     private Ctm(Class<C> c) {
       // class
@@ -944,8 +940,8 @@ public final class Db {
         ResultSet rs = stm.executeQuery();
 
         List<O> r = possibleCount > 0
-            ? new ArrayList<O>(possibleCount)
-            : new ArrayList<O>();
+            ? new ArrayList<>(possibleCount)
+            : new ArrayList<>();
         while (rs.next()) {
           r.add(result(rs));
         }
@@ -966,14 +962,14 @@ public final class Db {
       // try orm
       if (initRsCtm(rs)) {
         try {
-          Object o = ctm.c.newInstance();
+          O o = ctm.c.newInstance();
           for (int i = 0; i < fcms.length; i++) {
             Object v = rs.getObject(i + 1);
             if (v == null) {continue;}
             if (fcms[i] == null) {continue;}
             fcms[i].fset(o, v);
           }
-          return (O) o;
+          return o;
 
         } catch (Exception e) {
           throw new DbException("Db orm fail", e);
@@ -984,7 +980,7 @@ public final class Db {
       if (cnames.length == 1) {
         return (O) rs.getObject(1);
       } else {
-        Map<String, Object> map = new HashMap<String, Object>(
+        Map<String, Object> map = new HashMap<>(
             cnames.length + cnames.length / 2);
         for (int i = 0; i < cnames.length; i++) {
           map.put(cnames[i], rs.getObject(i + 1));
@@ -1129,7 +1125,7 @@ public final class Db {
 
       } else {
         Map<String, Object> map =
-            new HashMap<String, Object>(ccount + ccount / 3 + 1, 0.75f);
+            new HashMap<>(ccount + ccount / 3 + 1, 0.75f);
         for (int i = 1; i <= ccount; i++) {
           map.put(meta.getColumnName(i), generatedKeyFix(rs.getObject(i)));
         }
@@ -1139,7 +1135,7 @@ public final class Db {
 
     private Object   generatedKeyFix(Object r) {
       // type: BigInteger => Long
-      if (BigInteger.class.isInstance(r)) {
+      if (r instanceof  BigInteger) {
         if (((BigInteger)r).bitLength() < 64) {
           r = ((BigInteger)r).longValue();
         }
@@ -1285,11 +1281,11 @@ public final class Db {
     Ctm<O> ctm = Ctm.of(claz);
 
     StringBuilder sql    = new StringBuilder();
-    List<Object>  params = new ArrayList<Object>(1);
+    List<Object>  params = new ArrayList<>(1);
     sql.append("select * from ").append(ctm.t);
     whereIds(id, ctm, sql, params);
 
-    return queryOne(new Query<O>(claz, sql.toString(), params.toArray()));
+    return queryOne(new Query<>(claz, sql.toString(), params.toArray()));
   }
 
   /**
@@ -1303,8 +1299,8 @@ public final class Db {
     Ctm<?> ctm = Ctm.of(o.getClass());
     StringBuilder sql = new StringBuilder();
     StringBuilder qms = new StringBuilder();
-    List<Object>  params = new ArrayList<Object>();
-    List<Fcm>     autoIncres = new ArrayList<Fcm>();
+    List<Object>  params = new ArrayList<>();
+    List<Fcm>     autoIncres = new ArrayList<>();
 
     // compose sql
     sql.append("insert into ").append(ctm.t).append("(");
@@ -1369,7 +1365,7 @@ public final class Db {
   public  boolean     update(Object o, boolean onlyNonNullFields) {
     Ctm<?> ctm = Ctm.of(o.getClass());
     StringBuilder sql = new StringBuilder();
-    List<Object>  params = new ArrayList<Object>();
+    List<Object>  params = new ArrayList<>();
 
     // update {table}
     sql.append("update ").append(ctm.t);
@@ -1417,7 +1413,7 @@ public final class Db {
     Ctm<?> ctm = Ctm.of(id.getClass());
 
     StringBuilder sql    = new StringBuilder();
-    List<Object>  params = new ArrayList<Object>(1);
+    List<Object>  params = new ArrayList<>(1);
     sql.append("delete from ").append(ctm.t);
     whereIds(id, ctm, sql, params);
 
